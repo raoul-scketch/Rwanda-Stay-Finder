@@ -1,22 +1,29 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Rwanda Stays booking platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: accommodations
+    description: Accommodation listings
+  - name: bookings
+    description: Booking management
+  - name: reviews
+    description: User reviews
+  - name: users
+    description: User management
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +31,288 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /accommodations:
+    get:
+      operationId: listAccommodations
+      tags: [accommodations]
+      summary: List all accommodations
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [hotel, apartment, hostel, guesthouse, lodge, villa, other]
+        - name: province
+          in: query
+          schema:
+            type: string
+        - name: district
+          in: query
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: minRating
+          in: query
+          schema:
+            type: number
+        - name: amenities
+          in: query
+          schema:
+            type: string
+        - name: checkIn
+          in: query
+          schema:
+            type: string
+        - name: checkOut
+          in: query
+          schema:
+            type: string
+        - name: guests
+          in: query
+          schema:
+            type: number
+        - name: page
+          in: query
+          schema:
+            type: number
+        - name: limit
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of accommodations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccommodationListResponse"
+
+  /accommodations/{id}:
+    get:
+      operationId: getAccommodation
+      tags: [accommodations]
+      summary: Get accommodation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Accommodation detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccommodationDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /accommodations/{id}/reviews:
+    get:
+      operationId: getAccommodationReviews
+      tags: [reviews]
+      summary: Get reviews for an accommodation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+        - name: page
+          in: query
+          schema:
+            type: number
+        - name: limit
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Reviews list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewListResponse"
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Submit a review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewInput"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List user bookings
+      parameters:
+        - name: guestEmail
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, cancelled, completed]
+      responses:
+        "200":
+          description: Bookings list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingListResponse"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Booking detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking (cancel, etc.)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingInput"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/payment:
+    post:
+      operationId: processPayment
+      tags: [bookings]
+      summary: Process payment for a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "200":
+          description: Payment result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResult"
+        "400":
+          description: Payment error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +323,343 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
+
+    AccommodationType:
+      type: string
+      enum: [hotel, apartment, hostel, guesthouse, lodge, villa, other]
+
+    PaymentMethod:
+      type: string
+      enum: [credit_card, mobile_money, airtel_money]
+
+    BookingStatus:
+      type: string
+      enum: [pending, confirmed, cancelled, completed]
+
+    Accommodation:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/AccommodationType"
+        description:
+          type: string
+        province:
+          type: string
+        district:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        pricePerNight:
+          type: number
+        currency:
+          type: string
+        mainImage:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        amenities:
+          type: array
+          items:
+            type: string
+        maxGuests:
+          type: number
+        bedrooms:
+          type: number
+        bathrooms:
+          type: number
+        averageRating:
+          type: number
+        reviewCount:
+          type: number
+        featured:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - type
+        - description
+        - province
+        - district
+        - address
+        - latitude
+        - longitude
+        - pricePerNight
+        - currency
+        - mainImage
+        - images
+        - amenities
+        - maxGuests
+        - bedrooms
+        - bathrooms
+        - averageRating
+        - reviewCount
+        - featured
+        - createdAt
+
+    AccommodationDetail:
+      allOf:
+        - $ref: "#/components/schemas/Accommodation"
+        - type: object
+          properties:
+            recentReviews:
+              type: array
+              items:
+                $ref: "#/components/schemas/Review"
+
+    AccommodationListResponse:
+      type: object
+      properties:
+        accommodations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Accommodation"
+        total:
+          type: number
+        page:
+          type: number
+        limit:
+          type: number
+        totalPages:
+          type: number
+      required:
+        - accommodations
+        - total
+        - page
+        - limit
+        - totalPages
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: number
+        accommodationId:
+          type: number
+        guestName:
+          type: string
+        rating:
+          type: number
+        title:
+          type: string
+        comment:
+          type: string
+        stayDate:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - accommodationId
+        - guestName
+        - rating
+        - title
+        - comment
+        - stayDate
+        - createdAt
+
+    CreateReviewInput:
+      type: object
+      properties:
+        guestName:
+          type: string
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+        title:
+          type: string
+        comment:
+          type: string
+        stayDate:
+          type: string
+      required:
+        - guestName
+        - rating
+        - title
+        - comment
+        - stayDate
+
+    ReviewListResponse:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        total:
+          type: number
+        page:
+          type: number
+        limit:
+          type: number
+        totalPages:
+          type: number
+      required:
+        - reviews
+        - total
+        - page
+        - limit
+        - totalPages
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: number
+        accommodationId:
+          type: number
+        accommodationName:
+          type: string
+        accommodationImage:
+          type: string
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestPhone:
+          type: string
+        checkIn:
+          type: string
+        checkOut:
+          type: string
+        guests:
+          type: number
+        nights:
+          type: number
+        pricePerNight:
+          type: number
+        totalPrice:
+          type: number
+        currency:
+          type: string
+        status:
+          $ref: "#/components/schemas/BookingStatus"
+        paymentMethod:
+          $ref: "#/components/schemas/PaymentMethod"
+        paymentStatus:
+          type: string
+          enum: [pending, paid, refunded]
+        confirmationCode:
+          type: string
+        specialRequests:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - accommodationId
+        - accommodationName
+        - accommodationImage
+        - guestName
+        - guestEmail
+        - guestPhone
+        - checkIn
+        - checkOut
+        - guests
+        - nights
+        - pricePerNight
+        - totalPrice
+        - currency
+        - status
+        - paymentMethod
+        - paymentStatus
+        - confirmationCode
+        - createdAt
+
+    CreateBookingInput:
+      type: object
+      properties:
+        accommodationId:
+          type: number
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestPhone:
+          type: string
+        checkIn:
+          type: string
+        checkOut:
+          type: string
+        guests:
+          type: number
+        paymentMethod:
+          $ref: "#/components/schemas/PaymentMethod"
+        specialRequests:
+          type: string
+      required:
+        - accommodationId
+        - guestName
+        - guestEmail
+        - guestPhone
+        - checkIn
+        - checkOut
+        - guests
+        - paymentMethod
+
+    UpdateBookingInput:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/BookingStatus"
+        specialRequests:
+          type: string
+
+    PaymentInput:
+      type: object
+      properties:
+        paymentMethod:
+          $ref: "#/components/schemas/PaymentMethod"
+        cardNumber:
+          type: string
+        cardExpiry:
+          type: string
+        cardCvv:
+          type: string
+        cardHolderName:
+          type: string
+        mobileMoneyPhone:
+          type: string
+        mobileMoneyNetwork:
+          type: string
+          enum: [mtn, airtel]
+      required:
+        - paymentMethod
+
+    PaymentResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        transactionId:
+          type: string
+        message:
+          type: string
+        booking:
+          $ref: "#/components/schemas/Booking"
+      required:
+        - success
+        - message
+        - booking

@@ -1,0 +1,22 @@
+packages:
+  "react-leaflet": "Interactive map components"
+  "leaflet": "Core map library"
+  "@types/leaflet": "Types for leaflet"
+  "framer-motion": "Smooth animations and page transitions"
+  "date-fns": "Date formatting and manipulation"
+  "lucide-react": "Beautiful consistent icons"
+  "clsx": "Utility for constructing className strings"
+  "tailwind-merge": "Utility for merging tailwind classes without style conflicts"
+  "react-day-picker": "Date picker for booking calendar"
+
+images:
+  - path: "artifacts/rwanda-stays/public/images/hero-pattern.png"
+    description: "Warm earthy minimal topographic contour lines pattern, terracotta and cream colors, subtle and abstract"
+    aspect_ratio: "16:9"
+  - path: "artifacts/rwanda-stays/public/images/logo-icon.png"
+    description: "Minimalist modern geometric icon representing a house interwoven with rolling hills, solid warm terracotta color on transparent background"
+    aspect_ratio: "1:1"
+
+notes:
+  - Expects the @workspace/api-client-react to provide fully typed hooks.
+  - Map feature relies on Leaflet and OpenStreetMap tiles.
