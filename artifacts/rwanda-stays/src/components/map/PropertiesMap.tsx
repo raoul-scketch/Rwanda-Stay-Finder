@@ -1,16 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Accommodation } from '@workspace/api-client-react';
 import { formatRWF } from '@/lib/utils';
-import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import Map, { Marker, NavigationControl } from 'react-map-gl/mapbox';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Fix Leaflet's default icon issue in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+const MAPBOX_TOKEN = 'pk.eyJ1IjoicmFvdWxraGFsZWIiLCJhIjoiY21tdWxndXJuMW1yczJxcjIwMnZxYXpxaiJ9.da3JAqJX1QgbRfxzgdgGlA';
 
 interface Props {
   accommodations: Accommodation[];
@@ -19,63 +13,62 @@ interface Props {
   className?: string;
 }
 
-// Component to handle map centering when active item changes
-function MapController({ activeItem, items }: { activeItem?: Accommodation, items: Accommodation[] }) {
-  const map = useMap();
+export function PropertiesMap({ accommodations, activeId, onMarkerClick, className = "h-full w-full" }: Props) {
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    if (activeItem) {
-      map.flyTo([activeItem.latitude, activeItem.longitude], 14, { duration: 1.5 });
-    } else if (items.length > 0) {
-      // Auto-fit bounds if no active item but we have items
-      const bounds = L.latLngBounds(items.map(item => [item.latitude, item.longitude]));
-      map.fitBounds(bounds, { padding: [50, 50] });
+    if (activeId && mapRef.current) {
+      const activeItem = accommodations.find(a => a.id === activeId);
+      if (activeItem) {
+        mapRef.current.flyTo({
+          center: [activeItem.longitude, activeItem.latitude],
+          zoom: 14,
+          duration: 1500
+        });
+      }
     }
-  }, [activeItem, map, items]);
-
-  return null;
-}
-
-export function PropertiesMap({ accommodations, activeId, onMarkerClick, className = "h-full w-full" }: Props) {
-  // Center of Rwanda roughly
-  const center: [number, number] = [-1.9403, 29.8739];
-  const activeItem = accommodations.find(a => a.id === activeId);
-
-  const createCustomIcon = (price: number, isActive: boolean) => {
-    return L.divIcon({
-      className: `custom-price-marker ${isActive ? 'active' : ''}`,
-      html: `<div>${formatRWF(price).replace('RWF', '').trim()}</div>`,
-      iconSize: [60, 30],
-      iconAnchor: [30, 15],
-    });
-  };
+  }, [activeId, accommodations]);
 
   return (
     <div className={`relative z-0 rounded-2xl overflow-hidden shadow-inner ${className}`}>
-      <MapContainer 
-        center={center} 
-        zoom={9} 
-        className="h-full w-full"
-        zoomControl={false}
+      <Map
+        ref={mapRef}
+        mapboxAccessToken={MAPBOX_TOKEN}
+        initialViewState={{
+          longitude: 29.8739,
+          latitude: -1.9403,
+          zoom: 8
+        }}
+        mapStyle="mapbox://styles/mapbox/dark-v11"
+        attributionControl={false}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        />
+        <NavigationControl position="bottom-right" />
         
-        {accommodations.map((acc) => (
-          <Marker
-            key={acc.id}
-            position={[acc.latitude, acc.longitude]}
-            icon={createCustomIcon(acc.pricePerNight, acc.id === activeId)}
-            eventHandlers={{
-              click: () => onMarkerClick?.(acc.id),
-            }}
-          />
-        ))}
-
-        <MapController activeItem={activeItem} items={accommodations} />
-      </MapContainer>
+        {accommodations.map((acc) => {
+          const isActive = acc.id === activeId;
+          return (
+            <Marker
+              key={acc.id}
+              longitude={acc.longitude}
+              latitude={acc.latitude}
+              anchor="bottom"
+              onClick={(e) => {
+                e.originalEvent.stopPropagation();
+                onMarkerClick?.(acc.id);
+              }}
+            >
+              <div 
+                className={`flex flex-col items-center cursor-pointer transition-all duration-300 ${isActive ? 'scale-110 z-50' : 'z-10 hover:scale-105 hover:z-40'}`}
+              >
+                <div className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg border-2 ${isActive ? 'bg-white text-primary border-white' : 'bg-card text-primary border-transparent'}`}>
+                  {formatRWF(acc.pricePerNight).replace('RWF', '').trim()}
+                </div>
+                <div className={`w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${isActive ? 'border-t-white' : 'border-t-card'}`} />
+              </div>
+            </Marker>
+          );
+        })}
+      </Map>
     </div>
   );
 }
