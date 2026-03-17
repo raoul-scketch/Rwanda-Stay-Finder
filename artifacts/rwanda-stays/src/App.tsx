@@ -10,6 +10,7 @@ import AccommodationDetail from "@/pages/AccommodationDetail";
 import BookingFlow from "@/pages/BookingFlow";
 import Confirmation from "@/pages/Confirmation";
 import MyBookings from "@/pages/MyBookings";
+import ListProperty from "@/pages/ListProperty";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/book/:id" component={BookingFlow} />
       <Route path="/confirmation/:id" component={Confirmation} />
       <Route path="/my-bookings" component={MyBookings} />
+      <Route path="/list-property" component={ListProperty} />
       <Route component={NotFound} />
     </Switch>
   );

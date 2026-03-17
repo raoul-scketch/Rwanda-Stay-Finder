@@ -172,14 +172,14 @@ export default function BookingFlow() {
                   </div>
                   <div 
                     onClick={() => setFormData({...formData, paymentMethod: 'mobile_money', mobileNetwork: 'mtn'})}
-                    className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${formData.paymentMethod === 'mobile_money' && formData.mobileNetwork === 'mtn' ? 'border-yellow-500 bg-yellow-50' : 'border-border hover:border-yellow-500/30'}`}
+                    className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${formData.paymentMethod === 'mobile_money' && formData.mobileNetwork === 'mtn' ? 'border-yellow-500 bg-yellow-500/10' : 'border-border hover:border-yellow-500/30'}`}
                   >
                     <Smartphone className={`w-8 h-8 ${formData.paymentMethod === 'mobile_money' && formData.mobileNetwork === 'mtn' ? 'text-yellow-500' : 'text-muted-foreground'}`} />
                     <span className="text-xs font-bold text-center">MTN MoMo</span>
                   </div>
                   <div 
                     onClick={() => setFormData({...formData, paymentMethod: 'mobile_money', mobileNetwork: 'airtel'})}
-                    className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${formData.paymentMethod === 'mobile_money' && formData.mobileNetwork === 'airtel' ? 'border-red-500 bg-red-50' : 'border-border hover:border-red-500/30'}`}
+                    className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${formData.paymentMethod === 'mobile_money' && formData.mobileNetwork === 'airtel' ? 'border-red-500 bg-red-500/10' : 'border-border hover:border-red-500/30'}`}
                   >
                     <Smartphone className={`w-8 h-8 ${formData.paymentMethod === 'mobile_money' && formData.mobileNetwork === 'airtel' ? 'text-red-500' : 'text-muted-foreground'}`} />
                     <span className="text-xs font-bold text-center">Airtel Money</span>
@@ -198,7 +198,7 @@ export default function BookingFlow() {
 
                 {formData.paymentMethod === 'mobile_money' && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                    <div className={`p-4 rounded-xl mb-4 ${formData.mobileNetwork === 'mtn' ? 'bg-yellow-100 text-yellow-900' : 'bg-red-100 text-red-900'}`}>
+                    <div className={`p-4 rounded-xl mb-4 ${formData.mobileNetwork === 'mtn' ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'}`}>
                       <p className="text-sm font-medium">Enter your phone number. A prompt will appear on your phone to enter your PIN and approve the transaction.</p>
                     </div>
                     <Input 

@@ -16,6 +16,14 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Rwanda Stays Features
+- Dark theme by default (class="dark" on html element)
+- Interactive Leaflet map of Rwanda with price-label markers
+- 12 seeded accommodations with AI-generated property images (in artifacts/rwanda-stays/public/images/)
+- Property listing form (POST /api/accommodations) at /list-property (5-step wizard)
+- Booking flow with MTN Mobile Money, Airtel Money, credit card payment simulation
+- Reviews system with rating updates
+
 ## Structure
 
 ```text

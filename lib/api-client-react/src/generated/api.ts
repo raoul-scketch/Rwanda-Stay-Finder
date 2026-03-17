@@ -17,10 +17,12 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  Accommodation,
   AccommodationDetail,
   AccommodationListResponse,
   Booking,
   BookingListResponse,
+  CreateAccommodationInput,
   CreateBookingInput,
   CreateReviewInput,
   ErrorResponse,
@@ -118,6 +120,93 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Create a new accommodation listing
+ */
+export const getCreateAccommodationUrl = () => {
+  return `/api/accommodations`;
+};
+
+export const createAccommodation = async (
+  createAccommodationInput: CreateAccommodationInput,
+  options?: RequestInit,
+): Promise<Accommodation> => {
+  return customFetch<Accommodation>(getCreateAccommodationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createAccommodationInput),
+  });
+};
+
+export const getCreateAccommodationMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAccommodation>>,
+    TError,
+    { data: BodyType<CreateAccommodationInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAccommodation>>,
+  TError,
+  { data: BodyType<CreateAccommodationInput> },
+  TContext
+> => {
+  const mutationKey = ["createAccommodation"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAccommodation>>,
+    { data: BodyType<CreateAccommodationInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAccommodation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAccommodationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAccommodation>>
+>;
+export type CreateAccommodationMutationBody =
+  BodyType<CreateAccommodationInput>;
+export type CreateAccommodationMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Create a new accommodation listing
+ */
+export const useCreateAccommodation = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAccommodation>>,
+    TError,
+    { data: BodyType<CreateAccommodationInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createAccommodation>>,
+  TError,
+  { data: BodyType<CreateAccommodationInput> },
+  TContext
+> => {
+  return useMutation(getCreateAccommodationMutationOptions(options));
+};
 
 /**
  * @summary List all accommodations

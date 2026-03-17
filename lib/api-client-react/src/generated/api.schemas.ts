@@ -178,6 +178,26 @@ export interface PaymentInput {
   mobileMoneyNetwork?: PaymentInputMobileMoneyNetwork;
 }
 
+export interface CreateAccommodationInput {
+  name: string;
+  type: AccommodationType;
+  description: string;
+  province: string;
+  district: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  pricePerNight: number;
+  mainImage: string;
+  images?: string[];
+  amenities: string[];
+  maxGuests: number;
+  bedrooms: number;
+  bathrooms: number;
+  contactEmail: string;
+  contactPhone?: string;
+}
+
 export interface PaymentResult {
   success: boolean;
   transactionId?: string;

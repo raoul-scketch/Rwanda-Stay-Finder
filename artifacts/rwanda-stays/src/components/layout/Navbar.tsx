@@ -8,6 +8,7 @@ export function Navbar() {
   const links = [
     { href: "/explore", label: "Explore" },
     { href: "/my-bookings", label: "My Bookings" },
+    { href: "/list-property", label: "List your property" },
   ];
 
   return (

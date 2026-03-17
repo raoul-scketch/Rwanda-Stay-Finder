@@ -20,7 +20,7 @@ export default function Confirmation() {
       
       <main className="max-w-2xl mx-auto px-4 mt-12">
         <div className="flex flex-col items-center text-center mb-10">
-          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
+          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
             <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
           </div>
           <h1 className="text-4xl font-display font-bold text-foreground mb-4">Booking Confirmed!</h1>

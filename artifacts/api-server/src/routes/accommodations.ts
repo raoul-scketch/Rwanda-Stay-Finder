@@ -13,6 +13,50 @@ import {
 
 const router: IRouter = Router();
 
+router.post("/", async (req, res) => {
+  const body = req.body as {
+    name: string; type: string; description: string;
+    province: string; district: string; address: string;
+    latitude: number; longitude: number; pricePerNight: number;
+    mainImage: string; images?: string[]; amenities: string[];
+    maxGuests: number; bedrooms: number; bathrooms: number;
+    contactEmail: string; contactPhone?: string;
+  };
+
+  if (!body.name || !body.type || !body.description || !body.province ||
+      !body.district || !body.address || !body.contactEmail) {
+    res.status(400).json({ error: "validation_error", message: "Missing required fields" });
+    return;
+  }
+
+  const [created] = await db
+    .insert(accommodationsTable)
+    .values({
+      name: body.name,
+      type: body.type as any,
+      description: body.description,
+      province: body.province,
+      district: body.district,
+      address: body.address,
+      latitude: body.latitude ?? 0,
+      longitude: body.longitude ?? 0,
+      pricePerNight: String(body.pricePerNight),
+      currency: "RWF",
+      mainImage: body.mainImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
+      images: body.images ?? [],
+      amenities: body.amenities ?? [],
+      maxGuests: body.maxGuests ?? 2,
+      bedrooms: body.bedrooms ?? 1,
+      bathrooms: body.bathrooms ?? 1,
+      averageRating: 0,
+      reviewCount: 0,
+      featured: false,
+    })
+    .returning();
+
+  res.status(201).json(formatAccommodation(created));
+});
+
 router.get("/", async (req, res) => {
   const query = ListAccommodationsQueryParams.parse(req.query);
   const page = query.page ?? 1;

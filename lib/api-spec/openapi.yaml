@@ -33,6 +33,29 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 
   /accommodations:
+    post:
+      operationId: createAccommodation
+      tags: [accommodations]
+      summary: Create a new accommodation listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccommodationInput"
+      responses:
+        "201":
+          description: Accommodation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accommodation"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     get:
       operationId: listAccommodations
       tags: [accommodations]
@@ -647,6 +670,64 @@ components:
           enum: [mtn, airtel]
       required:
         - paymentMethod
+
+    CreateAccommodationInput:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/AccommodationType"
+        description:
+          type: string
+        province:
+          type: string
+        district:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        pricePerNight:
+          type: number
+        mainImage:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        amenities:
+          type: array
+          items:
+            type: string
+        maxGuests:
+          type: number
+        bedrooms:
+          type: number
+        bathrooms:
+          type: number
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+      required:
+        - name
+        - type
+        - description
+        - province
+        - district
+        - address
+        - latitude
+        - longitude
+        - pricePerNight
+        - mainImage
+        - amenities
+        - maxGuests
+        - bedrooms
+        - bathrooms
+        - contactEmail
 
     PaymentResult:
       type: object

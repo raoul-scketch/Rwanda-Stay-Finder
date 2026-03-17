@@ -15,6 +15,37 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * @summary Create a new accommodation listing
+ */
+export const CreateAccommodationBody = zod.object({
+  name: zod.string(),
+  type: zod.enum([
+    "hotel",
+    "apartment",
+    "hostel",
+    "guesthouse",
+    "lodge",
+    "villa",
+    "other",
+  ]),
+  description: zod.string(),
+  province: zod.string(),
+  district: zod.string(),
+  address: zod.string(),
+  latitude: zod.number(),
+  longitude: zod.number(),
+  pricePerNight: zod.number(),
+  mainImage: zod.string(),
+  images: zod.array(zod.string()).optional(),
+  amenities: zod.array(zod.string()),
+  maxGuests: zod.number(),
+  bedrooms: zod.number(),
+  bathrooms: zod.number(),
+  contactEmail: zod.string(),
+  contactPhone: zod.string().optional(),
+});
+
+/**
  * @summary List all accommodations
  */
 export const ListAccommodationsQueryParams = zod.object({

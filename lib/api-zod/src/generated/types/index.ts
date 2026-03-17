@@ -13,6 +13,7 @@ export * from "./accommodationType";
 export * from "./booking";
 export * from "./bookingPaymentStatus";
 export * from "./bookingStatus";
+export * from "./createAccommodationInput";
 export * from "./createBookingInput";
 export * from "./createReviewInput";
 export * from "./errorResponse";
