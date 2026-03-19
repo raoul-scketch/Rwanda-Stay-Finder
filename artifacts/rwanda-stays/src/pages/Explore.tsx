@@ -3,147 +3,343 @@ import { Navbar } from "@/components/layout/Navbar";
 import { PropertiesMap } from "@/components/map/PropertiesMap";
 import { AccommodationCard } from "@/components/accommodations/AccommodationCard";
 import { useListAccommodations, AccommodationType } from "@workspace/api-client-react";
-import { Search, SlidersHorizontal, Map as MapIcon, List } from "lucide-react";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { SlidersHorizontal, ChevronDown, Star, X } from "lucide-react";
+import { formatRWF } from "@/lib/utils";
+
+const PROVINCES = [
+  "Kigali City",
+  "Northern Province",
+  "Southern Province",
+  "Eastern Province",
+  "Western Province",
+];
+
+const TYPES = Object.values(AccommodationType);
+
+const AMENITIES = ["Free WiFi", "Pool", "Breakfast", "Parking", "Air Conditioning", "Gym"];
+
+function AccordionSection({
+  title,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-border last:border-0">
+      <button
+        className="w-full flex items-center justify-between py-3.5 text-sm font-semibold text-foreground hover:text-primary transition-colors"
+        onClick={() => setOpen(!open)}
+      >
+        {title}
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <div className="pb-4">{children}</div>}
+    </div>
+  );
+}
+
+function PriceSlider({
+  min,
+  max,
+  value,
+  onChange,
+}: {
+  min: number;
+  max: number;
+  value: [number, number];
+  onChange: (v: [number, number]) => void;
+}) {
+  const pct = (v: number) => ((v - min) / (max - min)) * 100;
+
+  return (
+    <div className="space-y-3">
+      <div className="relative h-1.5 bg-border rounded-full mx-1">
+        <div
+          className="absolute h-full bg-primary rounded-full"
+          style={{ left: `${pct(value[0])}%`, right: `${100 - pct(value[1])}%` }}
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={5000}
+          value={value[0]}
+          onChange={(e) => onChange([Math.min(Number(e.target.value), value[1] - 5000), value[1]])}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={5000}
+          value={value[1]}
+          onChange={(e) => onChange([value[0], Math.max(Number(e.target.value), value[0] + 5000)])}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
+        />
+        <div
+          className="absolute w-4 h-4 bg-white border-2 border-primary rounded-full -translate-y-1/2 top-1/2 -translate-x-1/2 shadow-md pointer-events-none"
+          style={{ left: `${pct(value[0])}%` }}
+        />
+        <div
+          className="absolute w-4 h-4 bg-white border-2 border-primary rounded-full -translate-y-1/2 top-1/2 translate-x-1/2 shadow-md pointer-events-none"
+          style={{ right: `${100 - pct(value[1])}%` }}
+        />
+      </div>
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>{formatRWF(value[0])}</span>
+        <span>{formatRWF(value[1])}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function Explore() {
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [showMapOnMobile, setShowMapOnMobile] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [filters, setFilters] = useState({
-    type: '' as AccommodationType | '',
-    province: '',
-    minPrice: '',
-    maxPrice: '',
-    minRating: ''
+    types: [] as string[],
+    provinces: [] as string[],
+    priceRange: [0, 500000] as [number, number],
+    minRating: 0,
+    amenities: [] as string[],
   });
 
-  const { data, isLoading } = useListAccommodations({
-    type: filters.type || undefined,
-    province: filters.province || undefined,
-    limit: 50
-  });
+  const { data, isLoading } = useListAccommodations({ limit: 50 });
 
-  const filteredData = data?.accommodations.filter(acc => {
-    if (filters.minPrice && acc.pricePerNight < Number(filters.minPrice)) return false;
-    if (filters.maxPrice && acc.pricePerNight > Number(filters.maxPrice)) return false;
-    if (filters.minRating && acc.averageRating < Number(filters.minRating)) return false;
+  const filteredData = data?.accommodations.filter((acc) => {
+    if (filters.types.length && !filters.types.includes(acc.type)) return false;
+    if (filters.provinces.length && !filters.provinces.includes(acc.province)) return false;
+    if (acc.pricePerNight < filters.priceRange[0] || acc.pricePerNight > filters.priceRange[1]) return false;
+    if (filters.minRating && acc.averageRating < filters.minRating) return false;
     return true;
   });
 
-  const types = Object.values(AccommodationType);
-  const provinces = ["Kigali City", "Northern Province", "Southern Province", "Eastern Province", "Western Province"];
+  const toggleType = (t: string) =>
+    setFilters((f) => ({
+      ...f,
+      types: f.types.includes(t) ? f.types.filter((x) => x !== t) : [...f.types, t],
+    }));
+
+  const toggleProvince = (p: string) =>
+    setFilters((f) => ({
+      ...f,
+      provinces: f.provinces.includes(p) ? f.provinces.filter((x) => x !== p) : [...f.provinces, p],
+    }));
+
+  const clearFilters = () =>
+    setFilters({ types: [], provinces: [], priceRange: [0, 500000], minRating: 0, amenities: [] });
+
+  const hasFilters =
+    filters.types.length > 0 ||
+    filters.provinces.length > 0 ||
+    filters.priceRange[0] > 0 ||
+    filters.priceRange[1] < 500000 ||
+    filters.minRating > 0;
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <Navbar />
-      
-      {/* Filter Bar */}
-      <div className="border-b border-border bg-card z-10 flex-shrink-0">
-        <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center gap-3 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-2 pr-2">
-            <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-semibold whitespace-nowrap">Filters</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <select 
-              className="h-10 px-4 rounded-full border border-input bg-muted/50 hover:bg-muted text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-colors cursor-pointer"
-              value={filters.type}
-              onChange={(e) => setFilters({...filters, type: e.target.value as AccommodationType})}
-            >
-              <option value="">Any Type</option>
-              {types.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
-            </select>
 
-            <select 
-              className="h-10 px-4 rounded-full border border-input bg-muted/50 hover:bg-muted text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-colors cursor-pointer"
-              value={filters.province}
-              onChange={(e) => setFilters({...filters, province: e.target.value})}
-            >
-              <option value="">Any Province</option>
-              {provinces.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            
-            <div className="flex items-center h-10 px-3 rounded-full border border-input bg-muted/50">
-              <span className="text-sm text-muted-foreground mr-2">RWF</span>
-              <input 
-                type="number" 
-                placeholder="Min" 
-                className="w-16 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                value={filters.minPrice}
-                onChange={e => setFilters({...filters, minPrice: e.target.value})}
+      <div className="flex-1 flex overflow-hidden">
+        {/* LEFT SIDEBAR */}
+        <aside className="hidden lg:flex flex-col w-[300px] shrink-0 border-r border-border overflow-y-auto bg-card">
+          {/* Mini Map */}
+          <div className="h-[220px] shrink-0 border-b border-border relative bg-muted">
+            {data && data.accommodations.length > 0 ? (
+              <PropertiesMap
+                accommodations={data.accommodations}
+                activeId={activeId}
+                onMarkerClick={(id) => setActiveId(id)}
+                className="h-full w-full"
               />
-              <span className="text-muted-foreground mx-1">-</span>
-              <input 
-                type="number" 
-                placeholder="Max" 
-                className="w-20 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                value={filters.maxPrice}
-                onChange={e => setFilters({...filters, maxPrice: e.target.value})}
-              />
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                Loading map...
+              </div>
+            )}
+          </div>
+
+          {/* Filters */}
+          <div className="flex-1 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-bold text-foreground">Filters</span>
+              </div>
+              {hasFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                  Clear all
+                </button>
+              )}
             </div>
 
-            <select 
-              className="h-10 px-4 rounded-full border border-input bg-muted/50 hover:bg-muted text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-colors cursor-pointer"
-              value={filters.minRating}
-              onChange={(e) => setFilters({...filters, minRating: e.target.value})}
-            >
-              <option value="">Any Rating</option>
-              <option value="4">4.0+ Stars</option>
-              <option value="4.5">4.5+ Stars</option>
-            </select>
-          </div>
-          
-          <div className="ml-auto md:hidden">
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => setShowMapOnMobile(!showMapOnMobile)}>
-              {showMapOnMobile ? <><List className="w-4 h-4 mr-2" /> List</> : <><MapIcon className="w-4 h-4 mr-2" /> Map</>}
-            </Button>
-          </div>
-        </div>
-      </div>
+            {/* Budget */}
+            <AccordionSection title="Your budget">
+              <PriceSlider
+                min={0}
+                max={500000}
+                value={filters.priceRange}
+                onChange={(v) => setFilters((f) => ({ ...f, priceRange: v }))}
+              />
+            </AccordionSection>
 
-      <div className="flex-1 flex overflow-hidden max-w-[1600px] mx-auto w-full">
-        {/* List View */}
-        <div className={`w-full lg:w-[60%] flex-col h-full overflow-y-auto ${showMapOnMobile ? 'hidden lg:flex' : 'flex'}`}>
-          <div className="p-4 sm:p-6 pb-20">
-            <h1 className="text-2xl font-display font-bold mb-6">
-              {filteredData?.length || 0} stays found
-            </h1>
-            
-            {isLoading ? (
-              <div className="grid grid-cols-1 gap-6">
-                {[1,2,3,4].map(i => <div key={i} className="h-48 bg-muted animate-pulse rounded-2xl"></div>)}
+            {/* Property Type */}
+            <AccordionSection title="Property type">
+              <div className="space-y-2.5">
+                {TYPES.map((t) => (
+                  <label key={t} className="flex items-center gap-3 cursor-pointer group">
+                    <div
+                      className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors shrink-0
+                        ${filters.types.includes(t) ? "bg-primary border-primary" : "border-border group-hover:border-primary/50"}`}
+                      onClick={() => toggleType(t)}
+                    >
+                      {filters.types.includes(t) && (
+                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
+                          <path d="M10 3L5 8.5 2 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                        </svg>
+                      )}
+                    </div>
+                    <span
+                      className="text-sm text-foreground capitalize flex-1 group-hover:text-primary transition-colors cursor-pointer"
+                      onClick={() => toggleType(t)}
+                    >
+                      {t}
+                    </span>
+                  </label>
+                ))}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-6">
-                {filteredData?.map(acc => (
-                  <AccommodationCard 
-                    key={acc.id} 
-                    accommodation={acc} 
+            </AccordionSection>
+
+            {/* Province */}
+            <AccordionSection title="Location" defaultOpen={false}>
+              <div className="space-y-2.5">
+                {PROVINCES.map((p) => (
+                  <label key={p} className="flex items-center gap-3 cursor-pointer group">
+                    <div
+                      className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors shrink-0
+                        ${filters.provinces.includes(p) ? "bg-primary border-primary" : "border-border group-hover:border-primary/50"}`}
+                      onClick={() => toggleProvince(p)}
+                    >
+                      {filters.provinces.includes(p) && (
+                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
+                          <path d="M10 3L5 8.5 2 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                        </svg>
+                      )}
+                    </div>
+                    <span
+                      className="text-sm text-foreground flex-1 group-hover:text-primary transition-colors cursor-pointer"
+                      onClick={() => toggleProvince(p)}
+                    >
+                      {p}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </AccordionSection>
+
+            {/* Rating */}
+            <AccordionSection title="Guest rating" defaultOpen={false}>
+              <div className="flex gap-2 flex-wrap">
+                {[0, 3, 3.5, 4, 4.5].map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setFilters((f) => ({ ...f, minRating: f.minRating === r ? 0 : r }))}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors
+                      ${filters.minRating === r ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"}`}
+                  >
+                    {r === 0 ? (
+                      "Any"
+                    ) : (
+                      <>
+                        <Star className="w-3 h-3 fill-current" />
+                        {r}+
+                      </>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </AccordionSection>
+          </div>
+        </aside>
+
+        {/* MAIN CONTENT */}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Top bar */}
+          <div className="border-b border-border bg-card px-6 py-3 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-foreground">
+                {isLoading ? "Loading..." : `${filteredData?.length || 0} stays in Rwanda`}
+              </span>
+              {hasFilters && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                  Filtered
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Mobile map toggle */}
+              <button
+                className="lg:hidden text-sm font-medium text-primary flex items-center gap-1.5"
+                onClick={() => setShowMap(!showMap)}
+              >
+                {showMap ? "Show list" : "Show map"}
+              </button>
+            </div>
+          </div>
+
+          {/* Listings */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Mobile map view */}
+            {showMap && (
+              <div className="lg:hidden h-80 border-b border-border">
+                {data && (
+                  <PropertiesMap
+                    accommodations={data.accommodations}
+                    activeId={activeId}
+                    onMarkerClick={(id) => setActiveId(id)}
+                    className="h-full w-full"
+                  />
+                )}
+              </div>
+            )}
+
+            <div className="p-4 sm:p-6 space-y-4">
+              {isLoading ? (
+                <>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-44 bg-muted animate-pulse rounded-2xl" />
+                  ))}
+                </>
+              ) : filteredData?.length === 0 ? (
+                <div className="py-20 text-center text-muted-foreground">
+                  <p className="text-lg font-semibold mb-2">No stays match your filters</p>
+                  <button onClick={clearFilters} className="text-primary hover:underline text-sm">
+                    Clear all filters
+                  </button>
+                </div>
+              ) : (
+                filteredData?.map((acc) => (
+                  <AccommodationCard
+                    key={acc.id}
+                    accommodation={acc}
                     isActive={activeId === acc.id}
                     onMouseEnter={() => setActiveId(acc.id)}
                     onMouseLeave={() => setActiveId(null)}
                     layout="horizontal"
                   />
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
-
-        {/* Map View */}
-        <div className={`w-full lg:w-[40%] bg-muted h-full p-4 lg:p-6 lg:pl-0 ${!showMapOnMobile ? 'hidden lg:block' : 'block'}`}>
-          <div className="w-full h-full rounded-2xl overflow-hidden shadow-inner border border-border">
-            {filteredData && filteredData.length > 0 && (
-              <PropertiesMap 
-                accommodations={filteredData} 
-                activeId={activeId}
-                onMarkerClick={(id) => setActiveId(id)}
-              />
-            )}
-          </div>
-        </div>
+        </main>
       </div>
     </div>
   );

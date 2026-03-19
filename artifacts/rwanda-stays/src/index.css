@@ -107,6 +107,15 @@
   }
 }
 
+/* Hide scrollbars utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Range input styling */
+input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: hsl(var(--primary)); border: 2px solid white; cursor: pointer; }
+input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: hsl(var(--primary)); border: 2px solid white; cursor: pointer; }
+
 /* Custom Map Marker Styling */
 .custom-price-marker {
   background: none;

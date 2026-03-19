@@ -173,11 +173,11 @@ export default function AccommodationDetail() {
 
               <div className="mt-6 pt-6 border-t border-border space-y-4">
                 <div className="flex justify-between text-muted-foreground">
-                  <span className="underline">RWF {formatRWF(acc.pricePerNight).replace('RWF','')} x 5 nights</span>
+                  <span>RWF {formatRWF(acc.pricePerNight).replace('RWF','')} x 5 nights</span>
                   <span>{formatRWF(acc.pricePerNight * 5)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span className="underline">Service fee</span>
+                  <span>Service fee</span>
                   <span>RWF 15,000</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg pt-4 border-t border-border">
